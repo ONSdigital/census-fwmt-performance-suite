@@ -1,0 +1,32 @@
+server:
+  port: 1
+
+spring:
+  application:
+    name: census-fwmt-performancesuite
+  jackson:
+    serialization:
+      WRITE_DATES_AS_TIMESTAMPS: false
+
+management:
+  # Place /info and /health in the root
+  endpoints.web.base-path: ''
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    root: WARN
+    uk.gov.ons.fwmt: INFO
+    org.springframework.security: INFO
+    org.springframework.web: INFO
+    org.springframework.amqp: INFO
+    org.hibernate: INFO
+    org.apache.commons.dbcp2: INFO
+    org.springframework: INFO
+  file: target/SpringErrors/spring.log
+  pattern:
+    console: "%d{yyyy-MMM-dd HH:mm:ss.SSS} %-5level [%thread] [%X{CID}] %logger{1}::%M - %msg%n"
+    file: "%d{yyyy-MMM-dd HH:mm:ss.SSS} %-5level [%thread] [%X{CID}] %logger{1}::%M - %msg%n"
+
