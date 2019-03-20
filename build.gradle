@@ -21,4 +21,13 @@ dependencies {
 	testImplementation 'org.springframework.security:spring-security-test'
 	compile 'uk.gov.ons.census.fwmt:census-fwmt-events:1.0.3-SNAPSHOT'
 	compile 'org.apache.commons:commons-csv:1.6'
+	compile('org.projectlombok:lombok')
+	annotationProcessor('org.projectlombok:lombok')
+	testAnnotationProcessor('org.projectlombok:lombok')
+}
+
+bootRun {
+	if (project.hasProperty('args')) {
+		args project.args.split(',')
+	}
 }
