@@ -49,37 +49,6 @@ public class GatewayPerformanceMonitor {
         String queueName = channel.queueDeclare().getQueue();
         channel.queueBind(queueName, GATEWAY_EVENTS_EXCHANGE, GATEWAY_EVENTS_ROUTING_KEY);
 
-        CSVPrinter csvPrinter = getCsvPrinter();
-
-        log.info("Listening for " + expectedMessageCount + " events..");
-        for (int count = 0; count <= expectedMessageCount; count++) {
-            int finalCount = count;
-            Consumer consumer = new DefaultConsumer(channel) {
-                @Override
-                public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body)
-                        throws IOException {
-                    String message = new String(body, StandardCharsets.UTF_8);
-                    GatewayEventDTO gatewayEventDTO = OBJECT_MAPPER.readValue(message.getBytes(), GatewayEventDTO.class);
-
-                    addEvent(gatewayEventDTO, csvPrinter);
-                    /*
-                    if(finalCount == expectedMessageCount) {
-                        try {
-                            Thread.sleep(1000);
-                        } catch (InterruptedException e) {
-                            log.error("Exited prematurely");
-                        }
-                        System.exit(0);
-                    }
-                    */
-                }
-
-            };
-            channel.basicConsume(queueName, true, consumer);
-        }
-    }
-
-    private CSVPrinter getCsvPrinter() throws IOException {
         File file = createFile();
 
         CSVFormat csvFileFormat = CSVFormat.DEFAULT.withRecordSeparator(System.lineSeparator());
@@ -88,8 +57,39 @@ public class GatewayPerformanceMonitor {
         csvPrinter.printRecord((Object[]) headers);
         csvPrinter.flush();
 
-        return csvPrinter;
+
+        log.info("Listening for " + expectedMessageCount + " events...");
+        int count = 0;
+        for (; count <= expectedMessageCount; count++) {
+            Consumer consumer = new DefaultConsumer(channel) {
+                @Override
+                public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body)
+                        throws IOException {
+                    String message = new String(body, StandardCharsets.UTF_8);
+                    GatewayEventDTO gatewayEventDTO = OBJECT_MAPPER.readValue(message.getBytes(), GatewayEventDTO.class);
+
+                    addEvent(gatewayEventDTO, csvPrinter);
+
+                }
+            };
+            channel.basicConsume(queueName, true, consumer);
+            if(count == expectedMessageCount) {
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException e) {
+                    log.error("Exited prematurely");
+                }
+                csvPrinter.flush();
+                csvPrinter.close();
+                fileWriter.close();
+
+                log.info("Secondary testing complete. Processed: " + count + " messages.");
+                System.exit(0);
+            }
+        }
     }
+
+
 
     private File createFile() {
         DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
