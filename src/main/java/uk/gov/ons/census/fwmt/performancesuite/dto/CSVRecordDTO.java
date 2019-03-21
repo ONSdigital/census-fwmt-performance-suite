@@ -7,8 +7,8 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class CSVRecordDTO {
 
+public class CSVRecordDTO {
     private String caseId;
     private String rmRequestReceived;
     private String canonicalActionCreateSent;
@@ -16,7 +16,7 @@ public class CSVRecordDTO {
     private String cometCreateJobRequest;
     private String cometCreateJobAcknowledged;
 
-    public String[] asRecord(){
+    private String[] asRecord(){
         String[] asRecord = new String[6];
         asRecord[0] = caseId;
         asRecord[1] = rmRequestReceived;
@@ -27,4 +27,16 @@ public class CSVRecordDTO {
         return asRecord;
     }
 
+    @Override
+    public String toString(){
+        String[] asRecord = asRecord();
+        String record = "";
+        record = asRecord[0];
+        record = record + "," + asRecord[1];
+        record = record + "," + asRecord[2];
+        record = record + "," + asRecord[3];
+        record = record + "," + asRecord[4];
+        record = record + "," + asRecord[5];
+        return record;
+    }
 }

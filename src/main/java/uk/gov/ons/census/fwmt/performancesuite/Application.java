@@ -12,15 +12,16 @@ public class Application {
 
 		GatewayPerformanceMonitor gatewayPerformanceMonitor = new GatewayPerformanceMonitor();
 
-        if (args.length == 0) {
+		// Used for local debugging
+        //gatewayPerformanceMonitor.enablePerformanceMonitor("localhost", 50000);
+
+       if (args.length == 0) {
             throw new Exception("Invalid usage. Please run with ONE argument of expected number of jobs.");
         } else if (args.length == 1) {
-            int expectedJobs = Integer.parseInt(args[0]);
+            long expectedJobs = Long.parseLong(args[0]);
             gatewayPerformanceMonitor.enablePerformanceMonitor("localhost", expectedJobs);
         } else {
             throw new Exception("Invalid usage. Please run with only ONE argument of expected number of jobs.");
         }
-
 	}
-
 }
