@@ -38,8 +38,6 @@ public class GatewayPerformanceMonitor {
   private final AtomicBoolean isJobComplete = new AtomicBoolean(false);
   private final AtomicLong expectedMessageCount = new AtomicLong();
   private Map<String, CSVRecordDTO> csvRecordDTOMap = new HashMap<>();
-  private String headers = "CaseId, RM - Request Received, Canonical - Action Create Sent," +
-      "Canonical - Create Job Received, Comet - Create Job Request, Comet - Create Job Acknowledged";
   private PrintWriter writer;
 
   public void enablePerformanceMonitor(String rabbitLocation, long receivedMessageCounted)
@@ -118,6 +116,8 @@ public class GatewayPerformanceMonitor {
 
     String newFileName = "Performance_Test_" + dateFormat.format(currentDateTime) + ".csv";
     writer = new PrintWriter("src/main/resources/results/" + newFileName, StandardCharsets.UTF_8);
+    String headers = "CaseId, RM - Request Received, Canonical - Action Create Sent," +
+        "Canonical - Create Job Received, Comet - Create Job Request, Comet - Create Job Acknowledged";
     writer.println(headers);
   }
 

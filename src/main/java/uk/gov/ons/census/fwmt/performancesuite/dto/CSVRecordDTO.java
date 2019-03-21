@@ -30,7 +30,7 @@ public class CSVRecordDTO {
   @Override
   public String toString() {
     String[] asRecord = asRecord();
-    String record = "";
+    String record;
     record = asRecord[0];
     record = record + "," + asRecord[1];
     record = record + "," + asRecord[2];
