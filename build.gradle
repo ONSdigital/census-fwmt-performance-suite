@@ -19,10 +19,12 @@ dependencies {
 
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	
+
 	compile('org.projectlombok:lombok')
 	annotationProcessor('org.projectlombok:lombok')
 	testAnnotationProcessor('org.projectlombok:lombok')
+
+	compile 'com.opencsv:opencsv:4.5'
 }
 
 bootRun {

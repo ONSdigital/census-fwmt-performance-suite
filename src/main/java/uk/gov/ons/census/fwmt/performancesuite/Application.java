@@ -3,6 +3,7 @@ package uk.gov.ons.census.fwmt.performancesuite;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import uk.gov.ons.census.fwmt.performancesuite.components.GatewayPerformanceMonitor;
+import uk.gov.ons.census.fwmt.performancesuite.components.ReportCreation;
 
 @SpringBootApplication
 public class Application {

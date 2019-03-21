@@ -9,6 +9,7 @@ import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import uk.gov.ons.census.fwmt.events.data.GatewayEventDTO;
 import uk.gov.ons.census.fwmt.performancesuite.dto.CSVRecordDTO;
@@ -18,6 +19,7 @@ import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.time.LocalTime;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -25,12 +27,16 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static java.time.temporal.ChronoUnit.*;
 import static uk.gov.ons.census.fwmt.events.config.GatewayEventQueueConfig.GATEWAY_EVENTS_EXCHANGE;
 import static uk.gov.ons.census.fwmt.events.config.GatewayEventQueueConfig.GATEWAY_EVENTS_ROUTING_KEY;
 
 @Slf4j
 @Component
 public class GatewayPerformanceMonitor {
+
+  @Autowired
+  private ReportCreation reportCreation;
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
   private static final Object lock = new Object();
@@ -71,6 +77,7 @@ public class GatewayPerformanceMonitor {
     while (!isJobComplete.get()) {
       Thread.sleep(1000);
     }
+    reportCreation.readCSV(Math.toIntExact(receivedMessageCounted));
     System.exit(0);
   }
 
@@ -97,6 +104,19 @@ public class GatewayPerformanceMonitor {
       break;
     case "Comet - Create Job Acknowledged":
       csvRecordDTO.setCometCreateJobAcknowledged(gatewayEventDTO.getLocalTime());
+      LocalTime rmRequestReceived = LocalTime.parse(csvRecordDTO.getRmRequestReceived());
+      LocalTime actionCreateSend = LocalTime.parse(csvRecordDTO.getCanonicalActionCreateSent());
+      LocalTime cometCreateJobAckowledge = LocalTime.parse(csvRecordDTO.getCometCreateJobAcknowledged());
+      LocalTime cometCreateJobSend = LocalTime.parse(csvRecordDTO.getCometCreateJobRequest());
+      String rmToCometSend = String.valueOf(MILLIS.between(rmRequestReceived, cometCreateJobSend));
+      String endToEndTimeTaken = String.valueOf(MILLIS.between(rmRequestReceived, cometCreateJobAckowledge));
+      String adapterProcessTime = String.valueOf(NANOS.between(rmRequestReceived, actionCreateSend));
+      String cometProcessTime = String.valueOf(MILLIS.between(cometCreateJobSend, cometCreateJobAckowledge));
+      csvRecordDTO.setRmToCometSend(rmToCometSend);
+      csvRecordDTO.setEndToEndTimeTaken(endToEndTimeTaken);
+      csvRecordDTO.setAdapterProcessTime(adapterProcessTime);
+      csvRecordDTO.setCometProcessTime(cometProcessTime);
+
       printRecord(csvRecordDTO);
       csvRecordDTOMap.remove(gatewayEventDTO.getCaseId());
       long count = counter.incrementAndGet();
@@ -117,9 +137,15 @@ public class GatewayPerformanceMonitor {
     String newFileName = "Performance_Test_" + dateFormat.format(currentDateTime) + ".csv";
     writer = new PrintWriter("src/main/resources/results/" + newFileName, StandardCharsets.UTF_8);
     String headers = "CaseId, RM - Request Received, Canonical - Action Create Sent," +
-        "Canonical - Create Job Received, Comet - Create Job Request, Comet - Create Job Acknowledged";
+        "Canonical - Create Job Received, Comet - Create Job Request, Comet - Create Job Acknowledged, "
+        + "RM To Comet Send Time Taken, End To End Time Taken, Adapter Process Time (Nano Secs), Comet Process Time";
     writer.println(headers);
   }
+//
+//  private void writeResultsReport() throws IOException {
+//    int messageCounter = expectedMessageCount;
+//    csVReader.readCSV(messageCounter);
+//  }
 
   private void closeFile() {
     synchronized (lock) {
