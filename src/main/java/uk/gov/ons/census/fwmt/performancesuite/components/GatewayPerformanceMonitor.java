@@ -32,104 +32,105 @@ import static uk.gov.ons.census.fwmt.events.config.GatewayEventQueueConfig.GATEW
 @Component
 public class GatewayPerformanceMonitor {
 
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    private Map<String, CSVRecordDTO> csvRecordDTOMap = new HashMap<>();
-    private static final Object lock = new Object();
-    private final AtomicLong counter = new AtomicLong();
-    private final AtomicBoolean isJobComplete = new AtomicBoolean(false);
-    private final AtomicLong expectedMessageCount = new AtomicLong();
-    private String headers = "CaseId, RM - Request Received, Canonical - Action Create Sent," +
-            "Canonical - Create Job Received, Comet - Create Job Request, Comet - Create Job Acknowledged";
-    private PrintWriter writer;
+  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+  private static final Object lock = new Object();
+  private final AtomicLong counter = new AtomicLong();
+  private final AtomicBoolean isJobComplete = new AtomicBoolean(false);
+  private final AtomicLong expectedMessageCount = new AtomicLong();
+  private Map<String, CSVRecordDTO> csvRecordDTOMap = new HashMap<>();
+  private String headers = "CaseId, RM - Request Received, Canonical - Action Create Sent," +
+      "Canonical - Create Job Received, Comet - Create Job Request, Comet - Create Job Acknowledged";
+  private PrintWriter writer;
 
-    public void enablePerformanceMonitor(String rabbitLocation, long receivedMessageCounted) throws IOException, TimeoutException, InterruptedException {
-        expectedMessageCount.set(receivedMessageCounted);
-        ConnectionFactory factory = new ConnectionFactory();
-        factory.setHost(rabbitLocation);
-        Connection connection = factory.newConnection();
-        Channel channel = connection.createChannel();
+  public void enablePerformanceMonitor(String rabbitLocation, long receivedMessageCounted)
+      throws IOException, TimeoutException, InterruptedException {
+    expectedMessageCount.set(receivedMessageCounted);
+    ConnectionFactory factory = new ConnectionFactory();
+    factory.setHost(rabbitLocation);
+    Connection connection = factory.newConnection();
+    Channel channel = connection.createChannel();
 
-        channel.exchangeDeclare(GATEWAY_EVENTS_EXCHANGE, "fanout", true);
-        String queueName = channel.queueDeclare().getQueue();
-        channel.queueBind(queueName, GATEWAY_EVENTS_EXCHANGE, GATEWAY_EVENTS_ROUTING_KEY);
+    channel.exchangeDeclare(GATEWAY_EVENTS_EXCHANGE, "fanout", true);
+    String queueName = channel.queueDeclare().getQueue();
+    channel.queueBind(queueName, GATEWAY_EVENTS_EXCHANGE, GATEWAY_EVENTS_ROUTING_KEY);
 
-        createFile();
+    createFile();
 
-        log.info("Listening for " + expectedMessageCount + " events...");
+    log.info("Listening for " + expectedMessageCount + " events...");
 
-        Consumer consumer = new DefaultConsumer(channel) {
-            @Override
-            public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body)
-                    throws IOException {
-                String message = new String(body, StandardCharsets.UTF_8);
-                GatewayEventDTO gatewayEventDTO = OBJECT_MAPPER.readValue(message.getBytes(), GatewayEventDTO.class);
+    Consumer consumer = new DefaultConsumer(channel) {
+      @Override
+      public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body)
+          throws IOException {
+        String message = new String(body, StandardCharsets.UTF_8);
+        GatewayEventDTO gatewayEventDTO = OBJECT_MAPPER.readValue(message.getBytes(), GatewayEventDTO.class);
 
-                addEvent(gatewayEventDTO);
-            }
-        };
-        channel.basicConsume(queueName, true, consumer);
+        addEvent(gatewayEventDTO);
+      }
+    };
+    channel.basicConsume(queueName, true, consumer);
 
-        while (!isJobComplete.get()) {
-            Thread.sleep(1000);
-        }
-        System.exit(0);
+    while (!isJobComplete.get()) {
+      Thread.sleep(1000);
     }
+    System.exit(0);
+  }
 
-    private void addEvent(GatewayEventDTO gatewayEventDTO) {
-        if (!csvRecordDTOMap.containsKey(gatewayEventDTO.getCaseId())) {
-            CSVRecordDTO dto = new CSVRecordDTO();
-            dto.setCaseId(gatewayEventDTO.getCaseId());
-            csvRecordDTOMap.put(gatewayEventDTO.getCaseId(), dto);
-        }
-        final CSVRecordDTO csvRecordDTO = csvRecordDTOMap.get(gatewayEventDTO.getCaseId());
-
-        switch (gatewayEventDTO.getEventType()) {
-            case "RM - Request Received":
-                csvRecordDTO.setRmRequestReceived(gatewayEventDTO.getLocalTime());
-                break;
-            case "Canonical - Action Create Sent":
-                csvRecordDTO.setCanonicalActionCreateSent(gatewayEventDTO.getLocalTime());
-                break;
-            case "Canonical - Create Job Received":
-                csvRecordDTO.setCanonicalCreateJobReceived(gatewayEventDTO.getLocalTime());
-                break;
-            case "Comet - Create Job Request":
-                csvRecordDTO.setCometCreateJobRequest(gatewayEventDTO.getLocalTime());
-                break;
-            case "Comet - Create Job Acknowledged":
-                csvRecordDTO.setCometCreateJobAcknowledged(gatewayEventDTO.getLocalTime());
-                printRecord(csvRecordDTO);
-                csvRecordDTOMap.remove(gatewayEventDTO.getCaseId());
-                long count = counter.incrementAndGet();
-
-                if (count == expectedMessageCount.get()) {
-                    closeFile();
-                    log.info("Secondary testing complete. Processed: " + count + " messages.");
-                    isJobComplete.set(true);
-                }
-                break;
-        }
+  private void addEvent(GatewayEventDTO gatewayEventDTO) {
+    if (!csvRecordDTOMap.containsKey(gatewayEventDTO.getCaseId())) {
+      CSVRecordDTO dto = new CSVRecordDTO();
+      dto.setCaseId(gatewayEventDTO.getCaseId());
+      csvRecordDTOMap.put(gatewayEventDTO.getCaseId(), dto);
     }
+    final CSVRecordDTO csvRecordDTO = csvRecordDTOMap.get(gatewayEventDTO.getCaseId());
 
-    private void createFile() throws IOException {
-        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-        Date currentDateTime = new Date();
+    switch (gatewayEventDTO.getEventType()) {
+    case "RM - Request Received":
+      csvRecordDTO.setRmRequestReceived(gatewayEventDTO.getLocalTime());
+      break;
+    case "Canonical - Action Create Sent":
+      csvRecordDTO.setCanonicalActionCreateSent(gatewayEventDTO.getLocalTime());
+      break;
+    case "Canonical - Create Job Received":
+      csvRecordDTO.setCanonicalCreateJobReceived(gatewayEventDTO.getLocalTime());
+      break;
+    case "Comet - Create Job Request":
+      csvRecordDTO.setCometCreateJobRequest(gatewayEventDTO.getLocalTime());
+      break;
+    case "Comet - Create Job Acknowledged":
+      csvRecordDTO.setCometCreateJobAcknowledged(gatewayEventDTO.getLocalTime());
+      printRecord(csvRecordDTO);
+      csvRecordDTOMap.remove(gatewayEventDTO.getCaseId());
+      long count = counter.incrementAndGet();
 
-        String newFileName = "Performance_Test_" + dateFormat.format(currentDateTime) + ".csv";
-        writer = new PrintWriter("src/main/resources/results/" + newFileName, StandardCharsets.UTF_8);
-        writer.println(headers);
+      if (count == expectedMessageCount.get()) {
+        closeFile();
+        log.info("Secondary testing complete. Processed: " + count + " messages.");
+        isJobComplete.set(true);
+      }
+      break;
     }
+  }
 
-    private void closeFile() {
-        synchronized (lock) {
-            writer.flush();
-            writer.close();
-        }
-    }
+  private void createFile() throws IOException {
+    DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+    Date currentDateTime = new Date();
 
-    private void printRecord(CSVRecordDTO csvRecordDTO) {
-        synchronized (lock) {
-            writer.println(csvRecordDTO.toString());
-        }
+    String newFileName = "Performance_Test_" + dateFormat.format(currentDateTime) + ".csv";
+    writer = new PrintWriter("src/main/resources/results/" + newFileName, StandardCharsets.UTF_8);
+    writer.println(headers);
+  }
+
+  private void closeFile() {
+    synchronized (lock) {
+      writer.flush();
+      writer.close();
     }
+  }
+
+  private void printRecord(CSVRecordDTO csvRecordDTO) {
+    synchronized (lock) {
+      writer.println(csvRecordDTO.toString());
+    }
+  }
 }
