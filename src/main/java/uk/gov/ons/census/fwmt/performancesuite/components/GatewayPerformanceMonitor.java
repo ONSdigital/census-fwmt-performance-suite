@@ -36,7 +36,7 @@ import static uk.gov.ons.census.fwmt.events.config.GatewayEventQueueConfig.GATEW
 public class GatewayPerformanceMonitor {
 
   @Autowired
-  private ReportCreation reportCreation;
+  private ReportCreation reportCreation = new ReportCreation();
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
   private static final Object lock = new Object();
@@ -45,6 +45,8 @@ public class GatewayPerformanceMonitor {
   private final AtomicLong expectedMessageCount = new AtomicLong();
   private Map<String, CSVRecordDTO> csvRecordDTOMap = new HashMap<>();
   private PrintWriter writer;
+
+  public static String fileName;
 
   public void enablePerformanceMonitor(String rabbitLocation, long receivedMessageCounted)
       throws IOException, TimeoutException, InterruptedException {
@@ -62,6 +64,7 @@ public class GatewayPerformanceMonitor {
 
     log.info("Listening for " + expectedMessageCount + " events...");
 
+    Thread.sleep(5000);
     Consumer consumer = new DefaultConsumer(channel) {
       @Override
       public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body)
@@ -109,6 +112,7 @@ public class GatewayPerformanceMonitor {
       LocalTime cometCreateJobAckowledge = LocalTime.parse(csvRecordDTO.getCometCreateJobAcknowledged());
       LocalTime cometCreateJobSend = LocalTime.parse(csvRecordDTO.getCometCreateJobRequest());
       String rmToCometSend = String.valueOf(MILLIS.between(rmRequestReceived, cometCreateJobSend));
+      //log.info("request received: {} create job send: {}",rmRequestReceived,cometCreateJobSend);
       String endToEndTimeTaken = String.valueOf(MILLIS.between(rmRequestReceived, cometCreateJobAckowledge));
       String adapterProcessTime = String.valueOf(NANOS.between(rmRequestReceived, actionCreateSend));
       String cometProcessTime = String.valueOf(MILLIS.between(cometCreateJobSend, cometCreateJobAckowledge));
@@ -135,17 +139,13 @@ public class GatewayPerformanceMonitor {
     Date currentDateTime = new Date();
 
     String newFileName = "Performance_Test_" + dateFormat.format(currentDateTime) + ".csv";
-    writer = new PrintWriter("src/main/resources/results/" + newFileName, StandardCharsets.UTF_8);
+    fileName = "src/main/resources/results/" + newFileName;
+    writer = new PrintWriter(fileName, StandardCharsets.UTF_8);
     String headers = "CaseId, RM - Request Received, Canonical - Action Create Sent," +
         "Canonical - Create Job Received, Comet - Create Job Request, Comet - Create Job Acknowledged, "
         + "RM To Comet Send Time Taken, End To End Time Taken, Adapter Process Time (Nano Secs), Comet Process Time";
     writer.println(headers);
   }
-//
-//  private void writeResultsReport() throws IOException {
-//    int messageCounter = expectedMessageCount;
-//    csVReader.readCSV(messageCounter);
-//  }
 
   private void closeFile() {
     synchronized (lock) {

@@ -1,5 +1,6 @@
 package uk.gov.ons.census.fwmt.performancesuite.dto;
 
+import com.opencsv.bean.CsvBindByName;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -9,15 +10,25 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 
 public class CSVRecordDTO {
+  @CsvBindByName(column = "CaseId")
   private String caseId;
+  @CsvBindByName(column = "RM - Request Received")
   private String rmRequestReceived;
+  @CsvBindByName(column = "Canonical - Action Create Sent")
   private String canonicalActionCreateSent;
+  @CsvBindByName(column = "Canonical - Create Job Received")
   private String canonicalCreateJobReceived;
+  @CsvBindByName(column = "Comet - Create Job Request")
   private String cometCreateJobRequest;
+  @CsvBindByName(column = "Comet - Create Job Acknowledged")
   private String cometCreateJobAcknowledged;
+  @CsvBindByName(column = "RM To Comet Send Time Taken")
   private String rmToCometSend;
+  @CsvBindByName(column = "End To End Time Taken")
   private String endToEndTimeTaken;
+  @CsvBindByName(column = "Adapter Process Time (Nano Secs)")
   private String adapterProcessTime;
+  @CsvBindByName(column = "Comet Process Time")
   private String cometProcessTime;
 
   private String[] asRecord() {
