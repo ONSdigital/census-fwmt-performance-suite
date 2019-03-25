@@ -112,7 +112,6 @@ public class GatewayPerformanceMonitor {
       LocalTime cometCreateJobAckowledge = LocalTime.parse(csvRecordDTO.getCometCreateJobAcknowledged());
       LocalTime cometCreateJobSend = LocalTime.parse(csvRecordDTO.getCometCreateJobRequest());
       String rmToCometSend = String.valueOf(MILLIS.between(rmRequestReceived, cometCreateJobSend));
-      //log.info("request received: {} create job send: {}",rmRequestReceived,cometCreateJobSend);
       String endToEndTimeTaken = String.valueOf(MILLIS.between(rmRequestReceived, cometCreateJobAckowledge));
       String adapterProcessTime = String.valueOf(NANOS.between(rmRequestReceived, actionCreateSend));
       String cometProcessTime = String.valueOf(MILLIS.between(cometCreateJobSend, cometCreateJobAckowledge));
