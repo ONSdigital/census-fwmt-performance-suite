@@ -140,7 +140,7 @@ public class GatewayPerformanceMonitor {
 
     String newFileName = "Performance_Test_" + dateFormat.format(currentDateTime) + ".csv";
     fileName = "src/main/resources/results/" + newFileName;
-    writer = new PrintWriter(fileName, StandardCharsets.UTF_8);
+    writer = new PrintWriter(fileName);
     String headers = "CaseId, RM - Request Received, Canonical - Action Create Sent," +
         "Canonical - Create Job Received, Comet - Create Job Request, Comet - Create Job Acknowledged, "
         + "RM To Comet Send Time Taken, End To End Time Taken, Adapter Process Time (Nano Secs), Comet Process Time";

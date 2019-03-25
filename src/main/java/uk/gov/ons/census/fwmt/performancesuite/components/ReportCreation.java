@@ -6,9 +6,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import uk.gov.ons.census.fwmt.performancesuite.dto.CSVRecordDTO;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -32,10 +32,9 @@ public class ReportCreation {
 
     createReportFile();
 
-    try (
-        Reader reader = Files.newBufferedReader(Paths.get(GatewayPerformanceMonitor.fileName));
-    ) {
-      CsvToBean<CSVRecordDTO> csvToBean = new CsvToBeanBuilder(reader)
+    try(BufferedReader bufferedReader = Files.newBufferedReader(Paths.get(GatewayPerformanceMonitor.fileName), StandardCharsets.UTF_8)) {
+
+      CsvToBean<CSVRecordDTO> csvToBean = new CsvToBeanBuilder(bufferedReader)
           .withType(CSVRecordDTO.class)
           .withIgnoreLeadingWhiteSpace(true)
           .build();
@@ -47,19 +46,23 @@ public class ReportCreation {
         endToEndMaxTimeTaken = getMax(Integer.parseInt(csvRecordDTO.getEndToEndTimeTaken()));
         endToEndMinTimeTaken = getMin(Integer.parseInt(csvRecordDTO.getEndToEndTimeTaken()));
       }
+
       cometProcessTimeAvg = cometProcessTime / numberOfJobs;
       adapterProcessTimeAvg = adapterTotalProcessTime / numberOfJobs;
 
-      writer.println("Performance Suite Report \n");
-      writer.println("Adapter process avg: " + adapterProcessTimeAvg);
-      writer.println("Comet process avg: " + cometProcessTimeAvg);
-      writer.println("End To End Total Time Taken: " + endToEndTimeTaken);
-      writer.println("Minimum End To End Time Taken: " + endToEndMinTimeTaken);
-      writer.println("Maximum End To End Tie Taken: " + endToEndMaxTimeTaken);
-
-      writer.flush();
-      writer.close();
+      writeReport(endToEndTimeTaken, endToEndMinTimeTaken, endToEndMaxTimeTaken, adapterProcessTimeAvg,
+          cometProcessTimeAvg);
     }
+  }
+
+  private void writeReport(long endToEndTimeTaken, long endToEndMinTimeTaken, long endToEndMaxTimeTaken,
+      long adapterProcessTimeAvg, long cometProcessTimeAvg) {
+    writer.println("Performance Suite Report \n");
+    writer.println("Adapter process avg: " + adapterProcessTimeAvg);
+    writer.println("Comet process avg: " + cometProcessTimeAvg);
+    writer.println("End To End Total Time Taken: " + endToEndTimeTaken);
+    writer.println("Minimum End To End Time Taken: " + endToEndMinTimeTaken);
+    writer.println("Maximum End To End Tie Taken: " + endToEndMaxTimeTaken);
   }
 
   private int large = 0;
@@ -88,6 +91,6 @@ public class ReportCreation {
     Date currentDateTime = new Date();
 
     reportFileName = "src/main/resources/results/" +  "Performance_Test_Analysis_Report_" + dateFormat.format(currentDateTime) + ".txt";
-    writer = new PrintWriter(reportFileName, StandardCharsets.UTF_8);
+    writer = new PrintWriter(reportFileName);
   }
 }
