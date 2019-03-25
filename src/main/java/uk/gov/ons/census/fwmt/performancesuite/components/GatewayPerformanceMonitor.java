@@ -27,7 +27,8 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static java.time.temporal.ChronoUnit.*;
+import static java.time.temporal.ChronoUnit.MILLIS;
+import static java.time.temporal.ChronoUnit.NANOS;
 import static uk.gov.ons.census.fwmt.events.config.GatewayEventQueueConfig.GATEWAY_EVENTS_EXCHANGE;
 import static uk.gov.ons.census.fwmt.events.config.GatewayEventQueueConfig.GATEWAY_EVENTS_ROUTING_KEY;
 
@@ -138,7 +139,7 @@ public class GatewayPerformanceMonitor {
     Date currentDateTime = new Date();
 
     String newFileName = "Performance_Test_" + dateFormat.format(currentDateTime) + ".csv";
-    fileName = "src/main/resources/results/" + newFileName;
+    fileName = "src/main/resources/csv/" + newFileName;
     writer = new PrintWriter(fileName);
     String headers = "CaseId, RM - Request Received, Canonical - Action Create Sent," +
         "Canonical - Create Job Received, Comet - Create Job Request, Comet - Create Job Acknowledged, "

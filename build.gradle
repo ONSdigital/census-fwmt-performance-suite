@@ -25,6 +25,7 @@ dependencies {
 	testAnnotationProcessor('org.projectlombok:lombok')
 
 	compile 'com.opencsv:opencsv:4.5'
+
 }
 
 bootRun {

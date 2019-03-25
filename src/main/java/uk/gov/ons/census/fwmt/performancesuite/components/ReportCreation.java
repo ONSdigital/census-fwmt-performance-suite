@@ -54,6 +54,7 @@ public class ReportCreation {
 
       writeReport(reportFile, endToEndTimeTaken, endToEndMinTimeTaken, endToEndMaxTimeTaken, adapterProcessTimeAvg,
           cometProcessTimeAvg);
+
     }
   }
 
@@ -61,10 +62,10 @@ public class ReportCreation {
       long endToEndMaxTimeTaken, long adapterProcessTimeAvg, long cometProcessTimeAvg) {
     try (BufferedWriter bufferedWriter = Files.newBufferedWriter(Paths.get(reportFileName))) {
       bufferedWriter.write("Performance Suite Report \n");
-      bufferedWriter.write("Adapter process avg: " + adapterProcessTimeAvg);
-      bufferedWriter.write("Comet process avg: " + cometProcessTimeAvg);
-      bufferedWriter.write("End To End Total Time Taken: " + endToEndTimeTaken);
-      bufferedWriter.write("Minimum End To End Time Taken: " + endToEndMinTimeTaken);
+      bufferedWriter.write("Adapter process avg: " + adapterProcessTimeAvg + "\n");
+      bufferedWriter.write("Comet process avg: " + cometProcessTimeAvg + "\n");
+      bufferedWriter.write("End To End Total Time Taken: " + endToEndTimeTaken + "\n");
+      bufferedWriter.write("Minimum End To End Time Taken: " + endToEndMinTimeTaken + "\n");
       bufferedWriter.write("Maximum End To End Tie Taken: " + endToEndMaxTimeTaken);
     } catch (IOException e) {
       log.error("Failed to write to file {}", e);
@@ -75,7 +76,7 @@ public class ReportCreation {
     DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
     Date currentDateTime = new Date();
 
-    return "src/main/resources/results/" + "Performance_Test_Analysis_Report_"
+    return "src/main/resources/report/" + "Performance_Test_Analysis_Report_"
         + dateFormat.format(currentDateTime) + ".txt";
   }
 
