@@ -46,7 +46,7 @@ public class GatewayPerformanceMonitor {
   private Map<String, CSVRecordDTO> csvRecordDTOMap = new HashMap<>();
   private PrintWriter writer;
 
-  public static String fileName;
+  private static String fileName;
 
   public void enablePerformanceMonitor(String rabbitLocation, long receivedMessageCounted)
       throws IOException, TimeoutException, InterruptedException {
@@ -80,7 +80,7 @@ public class GatewayPerformanceMonitor {
     while (!isJobComplete.get()) {
       Thread.sleep(1000);
     }
-    reportCreation.readCSV(Math.toIntExact(receivedMessageCounted));
+    reportCreation.readCSV(Math.toIntExact(receivedMessageCounted),fileName);
     System.exit(0);
   }
 
