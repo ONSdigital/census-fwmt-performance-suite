@@ -31,7 +31,6 @@ public class ReportCreation {
     long adapterTotalProcessTime = 0;
     long cometProcessTime = 0;
     long cometProcessTimeAvg;
-    float endToEndDouble = 0.00f;
 
     String reportFile = createReportFile();
 
@@ -46,7 +45,6 @@ public class ReportCreation {
         adapterTotalProcessTime += Long.valueOf(csvRecordDTO.getRmToCometSend());
         cometProcessTime += Long.valueOf(csvRecordDTO.getCometProcessTime());
         endToEndTimeTaken += Long.valueOf(csvRecordDTO.getEndToEndTimeTaken());
-        endToEndDouble = endToEndTimeTaken / 1000000000f;
         endToEndMaxTimeTaken = getMax(Integer.parseInt(csvRecordDTO.getEndToEndTimeTaken()));
         endToEndMinTimeTaken = getMin(Integer.parseInt(csvRecordDTO.getEndToEndTimeTaken()));
       }
@@ -54,21 +52,23 @@ public class ReportCreation {
       cometProcessTimeAvg = cometProcessTime / numberOfJobs;
       adapterProcessTimeAvg = adapterTotalProcessTime / numberOfJobs;
 
-      writeReport(reportFile, endToEndDouble, endToEndMinTimeTaken, endToEndMaxTimeTaken, adapterProcessTimeAvg,
+      writeReport(reportFile, endToEndTimeTaken, endToEndMinTimeTaken, endToEndMaxTimeTaken, adapterProcessTimeAvg,
           cometProcessTimeAvg);
 
     }
   }
 
-  private void writeReport(String reportFileName, float endToEndDouble, long endToEndMinTimeTaken,
+  private void writeReport(String reportFileName, long endToEndTimeTaken, long endToEndMinTimeTaken,
       long endToEndMaxTimeTaken, long adapterProcessTimeAvg, long cometProcessTimeAvg) {
     try (BufferedWriter bufferedWriter = Files.newBufferedWriter(Paths.get(reportFileName))) {
       bufferedWriter.write("Performance Suite Report \n");
       bufferedWriter.write("Adapter process avg (ms): " + adapterProcessTimeAvg + "\n");
       bufferedWriter.write("Comet process avg (ms): " + cometProcessTimeAvg + "\n");
-      bufferedWriter.write("End To End Total Time Taken (secs): " + endToEndDouble + "\n");
+      bufferedWriter.write("End To End Total Time Taken (ms): " + endToEndTimeTaken + "\n");
       bufferedWriter.write("Minimum End To End Time Taken (ms): " + endToEndMinTimeTaken  + "\n");
       bufferedWriter.write("Maximum End To End Tie Taken: (ms)" + endToEndMaxTimeTaken);
+
+
     } catch (IOException e) {
       log.error("Failed to write to file {}", e);
     }
