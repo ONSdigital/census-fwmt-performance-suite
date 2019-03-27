@@ -1,6 +1,9 @@
 package uk.gov.ons.census.fwmt.performancesuite.components;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
@@ -10,6 +13,7 @@ import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.stereotype.Component;
 import uk.gov.ons.census.fwmt.events.data.GatewayEventDTO;
 import uk.gov.ons.census.fwmt.performancesuite.dto.CSVRecordDTO;
@@ -19,7 +23,9 @@ import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -39,7 +45,7 @@ public class GatewayPerformanceMonitor {
   @Autowired
   private ReportCreation reportCreation = new ReportCreation();
 
-  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+  private static ObjectMapper OBJECT_MAPPER = new ObjectMapper();
   private static final Object lock = new Object();
   private final AtomicLong counter = new AtomicLong();
   private final AtomicBoolean isJobComplete = new AtomicBoolean(false);
@@ -70,8 +76,20 @@ public class GatewayPerformanceMonitor {
       @Override
       public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body)
           throws IOException {
+
+        JavaTimeModule module = new JavaTimeModule();
+        LocalDateTimeDeserializer localDateTimeDeserializer =  new LocalDateTimeDeserializer(DateTimeFormatter.ofPattern("HH:mm:ss.SSSSSS"));
+        module.addDeserializer(LocalDateTime.class, localDateTimeDeserializer);
+        OBJECT_MAPPER = Jackson2ObjectMapperBuilder.json()
+            .modules(module)
+            .featuresToDisable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+            .build();
+
+
         String message = new String(body, StandardCharsets.UTF_8);
         GatewayEventDTO gatewayEventDTO = OBJECT_MAPPER.readValue(message.getBytes(), GatewayEventDTO.class);
+        log.info(String.valueOf(gatewayEventDTO));
+
 
         addEvent(gatewayEventDTO);
       }
@@ -95,27 +113,30 @@ public class GatewayPerformanceMonitor {
 
     switch (gatewayEventDTO.getEventType()) {
     case "RM - Request Received":
-      csvRecordDTO.setRmRequestReceived(gatewayEventDTO.getLocalTime());
+      csvRecordDTO.setRmRequestReceived(String.valueOf(gatewayEventDTO.getLocalTime()));
       break;
     case "Canonical - Action Create Sent":
-      csvRecordDTO.setCanonicalActionCreateSent(gatewayEventDTO.getLocalTime());
+      csvRecordDTO.setCanonicalActionCreateSent(String.valueOf(gatewayEventDTO.getLocalTime()));
       break;
     case "Canonical - Create Job Received":
-      csvRecordDTO.setCanonicalCreateJobReceived(gatewayEventDTO.getLocalTime());
+      csvRecordDTO.setCanonicalCreateJobReceived(String.valueOf(gatewayEventDTO.getLocalTime()));
       break;
     case "Comet - Create Job Request":
-      csvRecordDTO.setCometCreateJobRequest(gatewayEventDTO.getLocalTime());
+      csvRecordDTO.setCometCreateJobRequest(String.valueOf(gatewayEventDTO.getLocalTime()));
       break;
     case "Comet - Create Job Acknowledged":
-      csvRecordDTO.setCometCreateJobAcknowledged(gatewayEventDTO.getLocalTime());
+      csvRecordDTO.setCometCreateJobAcknowledged(String.valueOf(gatewayEventDTO.getLocalTime()));
       LocalTime rmRequestReceived = LocalTime.parse(csvRecordDTO.getRmRequestReceived());
       LocalTime actionCreateSend = LocalTime.parse(csvRecordDTO.getCanonicalActionCreateSent());
-      LocalTime cometCreateJobAckowledge = LocalTime.parse(csvRecordDTO.getCometCreateJobAcknowledged());
+      LocalTime canonicalRecieved = LocalTime.parse(csvRecordDTO.getCanonicalCreateJobReceived());
+      LocalTime cometCreateJobAcknowledge = LocalTime.parse((csvRecordDTO.getCometCreateJobAcknowledged()));
       LocalTime cometCreateJobSend = LocalTime.parse(csvRecordDTO.getCometCreateJobRequest());
+
       String rmToCometSend = String.valueOf(MILLIS.between(rmRequestReceived, cometCreateJobSend));
-      String endToEndTimeTaken = String.valueOf(MILLIS.between(rmRequestReceived, cometCreateJobAckowledge));
+      String endToEndTimeTaken = String.valueOf(MILLIS.between(rmRequestReceived, cometCreateJobAcknowledge));
       String adapterProcessTime = String.valueOf(NANOS.between(rmRequestReceived, actionCreateSend));
-      String cometProcessTime = String.valueOf(MILLIS.between(cometCreateJobSend, cometCreateJobAckowledge));
+      String cometProcessTime = String.valueOf(MILLIS.between(cometCreateJobSend, cometCreateJobAcknowledge));
+
       csvRecordDTO.setRmToCometSend(rmToCometSend);
       csvRecordDTO.setEndToEndTimeTaken(endToEndTimeTaken);
       csvRecordDTO.setAdapterProcessTime(adapterProcessTime);
