@@ -33,8 +33,36 @@ dependencies {
 
 }
 
+artifactory {
+	contextUrl = System.getenv('ARTIFACTORY_URL')
+	publish {
+		repository {
+			repoKey = 'libs-release-local'
+			username = System.getenv('ARTIFACTORY_USERNAME')
+			password = System.getenv('ARTIFACTORY_PASSWORD')
+		}
+	}
+}
+
+publishing {
+	publications {
+		maven(MavenPublication) {
+			groupId = group
+			artifactId = 'census-fwmt-performancesuite'
+			version = version
+
+			from components.java
+		}
+	}
+}
+
+artifactoryPublish {
+	publications 'maven'
+}
+
 bootRun {
 	if (project.hasProperty('args')) {
 		args project.args.split(',')
 	}
 }
+
