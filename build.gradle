@@ -1,6 +1,14 @@
 plugins {
-	id 'org.springframework.boot' version '2.1.3.RELEASE'
 	id 'java'
+	id 'application'
+	id 'idea'
+	id 'maven'
+	id 'maven-publish'
+	id 'org.springframework.boot' version '2.1.3.RELEASE'
+	id 'io.spring.dependency-management' version '1.0.6.RELEASE'
+	id 'jacoco'
+	id 'com.jfrog.artifactory' version '4.8.1'
+	id 'org.ajoberstar.grgit' version '3.0.0'
 }
 
 apply plugin: 'io.spring.dependency-management'
@@ -33,6 +41,12 @@ dependencies {
 
 }
 
+bootRun {
+	if (project.hasProperty('args')) {
+		args project.args.split(',')
+	}
+}
+
 artifactory {
 	contextUrl = System.getenv('ARTIFACTORY_URL')
 	publish {
@@ -58,11 +72,5 @@ publishing {
 
 artifactoryPublish {
 	publications 'maven'
-}
-
-bootRun {
-	if (project.hasProperty('args')) {
-		args project.args.split(',')
-	}
 }
 
