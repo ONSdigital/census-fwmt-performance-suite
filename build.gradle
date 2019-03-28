@@ -19,9 +19,8 @@ repositories {
 }
 
 dependencies {
-	compile("uk.gov.ons.census.fwmt:census-fwmt-events:1.0.6-RELEASE")
+	compile("uk.gov.ons.census.fwmt:census-fwmt-events:1.0.5-RELEASE")
 	compile("uk.gov.ons.census.fwmt:census-fwmt-common:1.0.8-RELEASE")
-
 
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
