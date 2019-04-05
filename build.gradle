@@ -1,28 +1,61 @@
+buildscript {
+	ext {
+		springBootVersion = '2.1.0.RELEASE'
+	}
+	repositories {
+		mavenCentral()
+		jcenter()
+	}
+	dependencies {
+		classpath 'org.springframework.boot:spring-boot-gradle-plugin:2.1.0.RELEASE'
+		classpath 'org.jfrog.buildinfo:build-info-extractor-gradle:4.7.2'
+		classpath 'org.ajoberstar:gradle-git:1.4.2'
+	}
+}
+
+
 plugins {
 	id 'java'
 	id 'application'
 	id 'idea'
+	id 'eclipse'
 	id 'maven'
 	id 'maven-publish'
-	id 'org.springframework.boot' version '2.1.3.RELEASE'
+	id 'org.springframework.boot' version '2.1.0.RELEASE'
 	id 'io.spring.dependency-management' version '1.0.6.RELEASE'
-	id 'jacoco'
+	id 'com.github.psxpaul.execfork' version '0.1.8'
 	id 'com.jfrog.artifactory' version '4.8.1'
 	id 'org.ajoberstar.grgit' version '3.0.0'
 }
 
 apply plugin: 'io.spring.dependency-management'
 
+description = 'census-fwmt-performancesuite'
 group = 'uk.gov.ons.census.fwmt'
-version = '0.0.1-SNAPSHOT'
-sourceCompatibility = '11'
+version = '1.0.1-SNAPSHOT'
+
+sourceCompatibility = 11
+targetCompatibility = 11
+
+mainClassName = 'uk.gov.ons.census.fwmt.performancesuite.Application'
 
 repositories {
-	mavenCentral()
 	mavenLocal()
 	if (!project.hasProperty('omitSDCArtifactory')) {
-		maven { url 'http://artifactory-sdc.onsdigital.uk/artifactory/libs-release-local' }
-		maven { url 'http://artifactory-sdc.onsdigital.uk/artifactory/libs-snapshot-local' }
+		maven { url 'http://artifactory-sdc.onsdigital.uk/artifactory/libs-release' }
+		maven { url 'http://artifactory-sdc.onsdigital.uk/artifactory/libs-snapshot' }
+	}
+	mavenCentral()
+	mavenLocal()
+}
+
+springBoot {
+	buildInfo {
+		properties {
+			additional = [
+					'Git-Commit': grgit.head().getAbbreviatedId(8)
+			]
+		}
 	}
 }
 
@@ -37,14 +70,19 @@ dependencies {
 	annotationProcessor('org.projectlombok:lombok')
 	testAnnotationProcessor('org.projectlombok:lombok')
 
+	compile('io.springfox:springfox-swagger2:2.9.2')
+	compile('io.springfox:springfox-swagger-ui:2.9.2')
+
 	compile 'com.opencsv:opencsv:4.5'
 
 }
 
-bootRun {
-	if (project.hasProperty('args')) {
-		args project.args.split(',')
+bootJar {
+	group = 'uk.gov.ons.census.fwmt'
+	baseName = 'census-fwmt-performancesuite'
+	manifest {
 	}
+	version = version
 }
 
 artifactory {

@@ -2,27 +2,30 @@ package uk.gov.ons.census.fwmt.performancesuite;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import uk.gov.ons.census.fwmt.performancesuite.components.GatewayPerformanceMonitor;
-import uk.gov.ons.census.fwmt.performancesuite.components.ReportCreation;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.core.task.TaskExecutor;
+import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 @SpringBootApplication
+@ComponentScan({"uk.gov.ons.census.fwmt.performancesuite", "uk.gov.ons.census.fwmt.events"})
+@EnableSwagger2
+@EnableAsync
 public class Application {
 
-  public static void main(String[] args) throws Exception {
+  public static void main(String[] args) {
     SpringApplication.run(Application.class, args);
+  }
 
-    GatewayPerformanceMonitor gatewayPerformanceMonitor = new GatewayPerformanceMonitor();
-
-    // Used for local debugging
-    //gatewayPerformanceMonitor.enablePerformanceMonitor("localhost", 1);
-
-    if (args.length == 0) {
-      throw new Exception("Invalid usage. Please run with ONE argument of expected number of jobs.");
-    } else if (args.length == 1) {
-      long expectedJobs = Long.parseLong(args[0]);
-      gatewayPerformanceMonitor.enablePerformanceMonitor("localhost", expectedJobs);
-    } else {
-      throw new Exception("Invalid usage. Please run with only ONE argument of expected number of jobs.");
-    }
+  @Bean("threadPoolTaskExecutor")
+  public TaskExecutor getAsyncExecutor() {
+    ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+    executor.setCorePoolSize(20);
+    executor.setMaxPoolSize(1000);
+    executor.setWaitForTasksToCompleteOnShutdown(true);
+    executor.setThreadNamePrefix("Async-");
+    return executor;
   }
 }

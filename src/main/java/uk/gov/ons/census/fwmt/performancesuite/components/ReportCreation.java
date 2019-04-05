@@ -12,9 +12,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 @Slf4j
 @Component
@@ -31,8 +28,6 @@ public class ReportCreation {
     long adapterTotalProcessTime = 0;
     long cometProcessTime = 0;
     long cometProcessTimeAvg;
-
-    String reportFile = createReportFile();
 
     try (BufferedReader bufferedReader = Files.newBufferedReader(Paths.get(fileName), StandardCharsets.UTF_8)) {
 
@@ -52,15 +47,16 @@ public class ReportCreation {
       cometProcessTimeAvg = cometProcessTime / numberOfJobs;
       adapterProcessTimeAvg = adapterTotalProcessTime / numberOfJobs;
 
-      writeReport(reportFile, endToEndTimeTaken, endToEndMinTimeTaken, endToEndMaxTimeTaken, adapterProcessTimeAvg,
+      writeReport(endToEndTimeTaken, endToEndMinTimeTaken, endToEndMaxTimeTaken, adapterProcessTimeAvg,
           cometProcessTimeAvg);
 
     }
   }
 
-  private void writeReport(String reportFileName, long endToEndTimeTaken, long endToEndMinTimeTaken,
+  private void writeReport(long endToEndTimeTaken, long endToEndMinTimeTaken,
       long endToEndMaxTimeTaken, long adapterProcessTimeAvg, long cometProcessTimeAvg) {
-    try (BufferedWriter bufferedWriter = Files.newBufferedWriter(Paths.get(reportFileName))) {
+    try (BufferedWriter bufferedWriter = Files.newBufferedWriter(Paths.get(
+        "src/main/resources/report/Performance_Test_Report.txt"))) {
       bufferedWriter.write("Performance Suite Report \n");
       bufferedWriter.write("Adapter process avg (ms): " + adapterProcessTimeAvg + "\n");
       bufferedWriter.write("Comet process avg (ms): " + cometProcessTimeAvg + "\n");
@@ -72,14 +68,6 @@ public class ReportCreation {
     } catch (IOException e) {
       log.error("Failed to write to file {}", e);
     }
-  }
-
-  private String createReportFile() {
-    DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-    Date currentDateTime = new Date();
-
-    return "src/main/resources/report/" + "Performance_Test_Analysis_Report_"
-        + dateFormat.format(currentDateTime) + ".txt";
   }
 
   private int getMax(int input) {

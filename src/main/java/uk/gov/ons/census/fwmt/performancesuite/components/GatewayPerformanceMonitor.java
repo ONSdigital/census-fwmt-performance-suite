@@ -21,12 +21,9 @@ import uk.gov.ons.census.fwmt.performancesuite.dto.CSVRecordDTO;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
@@ -100,7 +97,6 @@ public class GatewayPerformanceMonitor {
       Thread.sleep(1000);
     }
     reportCreation.readCSV(Math.toIntExact(receivedMessageCounted),fileName);
-    System.exit(0);
   }
 
   private void addEvent(GatewayEventDTO gatewayEventDTO) {
@@ -156,12 +152,8 @@ public class GatewayPerformanceMonitor {
   }
 
   private void createFile() throws IOException {
-    DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-    Date currentDateTime = new Date();
-
-    String newFileName = "Performance_Test_" + dateFormat.format(currentDateTime) + ".csv";
-    fileName = "src/main/resources/csv/" + newFileName;
-    writer = new PrintWriter(fileName);
+    fileName = "src/main/resources/csv/Performance_Test_CSV.csv";
+    writer = new PrintWriter("src/main/resources/csv/Performance_Test_CSV.csv");
     String headers = "CaseId, RM - Request Received, Canonical - Action Create Sent," +
         "Canonical - Create Job Received, Comet - Create Job Request, Comet - Create Job Acknowledged, "
         + "RM To Comet Send Time Taken, End To End Time Taken, Adapter Process Time (Nano Secs), Comet Process Time";
