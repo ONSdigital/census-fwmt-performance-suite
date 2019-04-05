@@ -39,18 +39,16 @@ import static uk.gov.ons.census.fwmt.events.config.GatewayEventQueueConfig.GATEW
 @Component
 public class GatewayPerformanceMonitor {
 
-  @Autowired
-  private ReportCreation reportCreation = new ReportCreation();
-
-  private static ObjectMapper OBJECT_MAPPER = new ObjectMapper();
   private static final Object lock = new Object();
+  private static ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+  private static String fileName;
   private final AtomicLong counter = new AtomicLong();
   private final AtomicBoolean isJobComplete = new AtomicBoolean(false);
   private final AtomicLong expectedMessageCount = new AtomicLong();
+  @Autowired
+  private ReportCreation reportCreation = new ReportCreation();
   private Map<String, CSVRecordDTO> csvRecordDTOMap = new HashMap<>();
   private PrintWriter writer;
-
-  private static String fileName;
 
   public void enablePerformanceMonitor(String rabbitLocation, long receivedMessageCounted)
       throws IOException, TimeoutException, InterruptedException {
@@ -75,18 +73,17 @@ public class GatewayPerformanceMonitor {
           throws IOException {
 
         JavaTimeModule module = new JavaTimeModule();
-        LocalDateTimeDeserializer localDateTimeDeserializer =  new LocalDateTimeDeserializer(DateTimeFormatter.ofPattern("HH:mm:ss.SSSSSS"));
+        LocalDateTimeDeserializer localDateTimeDeserializer = new LocalDateTimeDeserializer(
+            DateTimeFormatter.ofPattern("HH:mm:ss.SSSSSS"));
         module.addDeserializer(LocalDateTime.class, localDateTimeDeserializer);
         OBJECT_MAPPER = Jackson2ObjectMapperBuilder.json()
             .modules(module)
             .featuresToDisable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
             .build();
 
-
         String message = new String(body, StandardCharsets.UTF_8);
         GatewayEventDTO gatewayEventDTO = OBJECT_MAPPER.readValue(message.getBytes(), GatewayEventDTO.class);
         log.info(String.valueOf(gatewayEventDTO));
-
 
         addEvent(gatewayEventDTO);
       }
@@ -96,7 +93,7 @@ public class GatewayPerformanceMonitor {
     while (!isJobComplete.get()) {
       Thread.sleep(1000);
     }
-    reportCreation.readCSV(Math.toIntExact(receivedMessageCounted),fileName);
+    reportCreation.readCSV(Math.toIntExact(receivedMessageCounted), fileName);
   }
 
   private void addEvent(GatewayEventDTO gatewayEventDTO) {

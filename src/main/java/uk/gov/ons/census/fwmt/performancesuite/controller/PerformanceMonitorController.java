@@ -14,13 +14,14 @@ import java.util.concurrent.TimeoutException;
 @Controller
 public class PerformanceMonitorController {
 
-  @Autowired
-  private GatewayPerformanceMonitor gatewayPerformanceMonitor;
   @Value("${rabbitmq.rabbitLocation}")
   String rabbitLocation;
+  @Autowired
+  private GatewayPerformanceMonitor gatewayPerformanceMonitor;
 
   @GetMapping("/enablePerformanceMonitor")
-  public String enablePerformanceMonitor(@RequestParam("expectedJobs") int expectedJobs) throws InterruptedException, TimeoutException, IOException {
+  public String enablePerformanceMonitor(@RequestParam("expectedJobs") int expectedJobs)
+      throws InterruptedException, TimeoutException, IOException {
     enablePerformanceMonitor(rabbitLocation, expectedJobs);
 
     return "Enabled performance monitor";
@@ -29,6 +30,6 @@ public class PerformanceMonitorController {
   @Async("threadPoolTaskExecutor")
   public void enablePerformanceMonitor(String rabbitLocation, int expectedJobs)
       throws InterruptedException, TimeoutException, IOException {
-      gatewayPerformanceMonitor.enablePerformanceMonitor(rabbitLocation, expectedJobs);
+    gatewayPerformanceMonitor.enablePerformanceMonitor(rabbitLocation, expectedJobs);
   }
 }

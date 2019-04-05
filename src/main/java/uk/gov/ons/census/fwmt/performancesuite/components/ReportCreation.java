@@ -61,9 +61,8 @@ public class ReportCreation {
       bufferedWriter.write("Adapter process avg (ms): " + adapterProcessTimeAvg + "\n");
       bufferedWriter.write("Comet process avg (ms): " + cometProcessTimeAvg + "\n");
       bufferedWriter.write("End To End Total Time Taken (ms): " + endToEndTimeTaken + "\n");
-      bufferedWriter.write("Minimum End To End Time Taken (ms): " + endToEndMinTimeTaken  + "\n");
+      bufferedWriter.write("Minimum End To End Time Taken (ms): " + endToEndMinTimeTaken + "\n");
       bufferedWriter.write("Maximum End To End Tie Taken: (ms)" + endToEndMaxTimeTaken);
-
 
     } catch (IOException e) {
       log.error("Failed to write to file {}", e);

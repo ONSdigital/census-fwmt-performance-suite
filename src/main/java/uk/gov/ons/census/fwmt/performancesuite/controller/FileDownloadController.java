@@ -23,14 +23,15 @@ public class FileDownloadController {
     HttpHeaders respHeaders = new HttpHeaders();
     respHeaders.setContentType(MediaType.TEXT_PLAIN);
     respHeaders.set(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName);
-    return new ResponseEntity<>(fileBytes,respHeaders, HttpStatus.OK);
+    return new ResponseEntity<>(fileBytes, respHeaders, HttpStatus.OK);
   }
 
   @GetMapping("/downloadCsv")
   public ResponseEntity downloadCSVData() throws IOException {
     File file = new File("src/main/resources/csv/Performance_Test_CSV.csv");
-      final byte[] fileBytes = Files.readAllBytes(file.toPath());
-      final ByteArrayResource resource = new ByteArrayResource(fileBytes);
-      return ResponseEntity.ok().contentLength(fileBytes.length).contentType(MediaType.APPLICATION_OCTET_STREAM).body(resource);
+    final byte[] fileBytes = Files.readAllBytes(file.toPath());
+    final ByteArrayResource resource = new ByteArrayResource(fileBytes);
+    return ResponseEntity.ok().contentLength(fileBytes.length).contentType(MediaType.APPLICATION_OCTET_STREAM)
+        .body(resource);
   }
 }
