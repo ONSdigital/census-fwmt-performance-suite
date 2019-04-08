@@ -3,4 +3,4 @@ pluginManagement {
 		gradlePluginPortal()
 	}
 }
-rootProject.name = 'performancesuite'
+rootProject.name = 'census-fwmt-performancesuite'
