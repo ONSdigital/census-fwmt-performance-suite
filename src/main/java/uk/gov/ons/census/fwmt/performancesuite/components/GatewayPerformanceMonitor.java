@@ -83,7 +83,6 @@ public class GatewayPerformanceMonitor {
 
         String message = new String(body, StandardCharsets.UTF_8);
         GatewayEventDTO gatewayEventDTO = OBJECT_MAPPER.readValue(message.getBytes(), GatewayEventDTO.class);
-        log.info(String.valueOf(gatewayEventDTO));
 
         addEvent(gatewayEventDTO);
       }
