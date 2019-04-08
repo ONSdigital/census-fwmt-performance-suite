@@ -1,0 +1,35 @@
+language: java
+jdk: openjdk11
+install: true
+script:
+- |
+  if [[ $TRAVIS_COMMIT_MESSAGE != 'CONCOURSE SNAPSHOT UPDATE' ]]; then
+    ./gradlew build --info;
+  fi
+env:
+  global:
+  - SPRING_PROFILES_ACTIVE=default,integration-tests
+branches:
+  only:
+  - master
+before_cache:
+- rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+- rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+cache:
+  directories:
+  - "$HOME/.gradle/caches/"
+  - "$HOME/.gradle/wrapper/"
+after_success:
+- bash <(curl -s https://codecov.io/bash)
+- |
+  set -e
+  if [[ "$TRAVIS_BRANCH" = "master" ]] && [[ "$TRAVIS_PULL_REQUEST" = "false" ]] && [[ $TRAVIS_COMMIT_MESSAGE != "CONCOURSE SNAPSHOT UPDATE" ]]; then
+    ./gradlew artifactPublish
+  fi
+- |
+  set -e
+  if [[ "$TRAVIS_BRANCH" = "master" ]] && [[ "$TRAVIS_PULL_REQUEST" = "false" ]] && [[ $TRAVIS_COMMIT_MESSAGE != "SNAPSHOT UPDATE" ]]; then
+    echo "$DOCKER_PASSWORD" | base64 --decode | docker login "$DOCKER_REGISTRY" --username "$DOCKER_USERNAME" --password-stdin
+    docker build -t "$DOCKER_LOCATION"/census-rm-fwmtperformancetest -t "$DOCKER_LOCATION"/census-rm-fwmtperformancetest:census-performancetest-$TRAVIS_BUILD_NUMBER --build-arg jar=build/libs/census-fwmt-performancesuite-*.jar .
+    docker push "$DOCKER_LOCATION"/census-rm-fwmtperformancetest
+  fi
