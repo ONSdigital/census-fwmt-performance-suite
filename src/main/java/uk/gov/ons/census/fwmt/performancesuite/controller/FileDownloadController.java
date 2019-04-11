@@ -1,5 +1,6 @@
 package uk.gov.ons.census.fwmt.performancesuite.controller;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -15,11 +16,16 @@ import java.nio.file.Files;
 @Controller
 public class FileDownloadController {
 
+  @Value("${storage.csvLocation}")
+  private String csvFileName;
+  @Value("${storage.reportLocation}")
+  private String reportFileName;
+
   @GetMapping("/downloadReport")
   public ResponseEntity<byte[]> downloadReportData() throws IOException {
-    File file = new File("src/main/resources/report/Performance_Test_Report.txt");
+    File file = new File(reportFileName);
     final byte[] fileBytes = Files.readAllBytes(file.toPath());
-    String fileName = "src/main/resources/report/Performance_Test_Report.txt";
+    String fileName = reportFileName;
     HttpHeaders respHeaders = new HttpHeaders();
     respHeaders.setContentType(MediaType.TEXT_PLAIN);
     respHeaders.set(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName);
@@ -28,7 +34,7 @@ public class FileDownloadController {
 
   @GetMapping("/downloadCsv")
   public ResponseEntity downloadCSVData() throws IOException {
-    File file = new File("src/main/resources/csv/Performance_Test_CSV.csv");
+    File file = new File(csvFileName);
     final byte[] fileBytes = Files.readAllBytes(file.toPath());
     final ByteArrayResource resource = new ByteArrayResource(fileBytes);
     return ResponseEntity.ok().contentLength(fileBytes.length).contentType(MediaType.APPLICATION_OCTET_STREAM)
