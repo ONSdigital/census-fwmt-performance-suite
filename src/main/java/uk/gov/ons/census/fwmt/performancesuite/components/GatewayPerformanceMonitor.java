@@ -13,6 +13,7 @@ import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.stereotype.Component;
 import uk.gov.ons.census.fwmt.events.data.GatewayEventDTO;
@@ -41,14 +42,19 @@ public class GatewayPerformanceMonitor {
 
   private static final Object lock = new Object();
   private static ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-  private static String fileName;
+  @Value("${storage.csvLocation}")
+  private String csvFileName;
   private final AtomicLong counter = new AtomicLong();
   private final AtomicBoolean isJobComplete = new AtomicBoolean(false);
   private final AtomicLong expectedMessageCount = new AtomicLong();
   @Autowired
-  private ReportCreation reportCreation = new ReportCreation();
+  private ReportCreation reportCreation;
   private Map<String, CSVRecordDTO> csvRecordDTOMap = new HashMap<>();
   private PrintWriter writer;
+
+  public GatewayPerformanceMonitor() {
+    this.csvFileName = csvFileName;
+  }
 
   public void enablePerformanceMonitor(String rabbitLocation, long receivedMessageCounted)
       throws IOException, TimeoutException, InterruptedException {
@@ -92,7 +98,7 @@ public class GatewayPerformanceMonitor {
     while (!isJobComplete.get()) {
       Thread.sleep(1000);
     }
-    reportCreation.readCSV(Math.toIntExact(receivedMessageCounted), fileName);
+    reportCreation.readCSV(Math.toIntExact(receivedMessageCounted), csvFileName);
   }
 
   private void addEvent(GatewayEventDTO gatewayEventDTO) {
@@ -148,8 +154,7 @@ public class GatewayPerformanceMonitor {
   }
 
   private void createFile() throws IOException {
-    fileName = "src/main/resources/csv/Performance_Test_CSV.csv";
-    writer = new PrintWriter("src/main/resources/csv/Performance_Test_CSV.csv");
+    writer = new PrintWriter(csvFileName);
     String headers = "CaseId, RM - Request Received, Canonical - Action Create Sent," +
         "Canonical - Create Job Received, Comet - Create Job Request, Comet - Create Job Acknowledged, "
         + "RM To Comet Send Time Taken, End To End Time Taken, Adapter Process Time (Nano Secs), Comet Process Time";

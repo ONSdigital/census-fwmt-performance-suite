@@ -3,6 +3,7 @@ package uk.gov.ons.census.fwmt.performancesuite.components;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import uk.gov.ons.census.fwmt.performancesuite.dto.CSVRecordDTO;
 
@@ -17,8 +18,14 @@ import java.nio.file.Paths;
 @Component
 public class ReportCreation {
 
+  @Value("${storage.reportLocation}")
+  private String reportFileName;
   private int large = 0;
   private int small = 0;
+
+  public ReportCreation() {
+    this.reportFileName = reportFileName;
+  }
 
   public void readCSV(int numberOfJobs, String fileName) throws IOException {
     long endToEndTimeTaken = 0;
@@ -55,8 +62,7 @@ public class ReportCreation {
 
   private void writeReport(long endToEndTimeTaken, long endToEndMinTimeTaken,
       long endToEndMaxTimeTaken, long adapterProcessTimeAvg, long cometProcessTimeAvg) {
-    try (BufferedWriter bufferedWriter = Files.newBufferedWriter(Paths.get(
-        "src/main/resources/report/Performance_Test_Report.txt"))) {
+    try (BufferedWriter bufferedWriter = Files.newBufferedWriter(Paths.get(reportFileName))) {
       bufferedWriter.write("Performance Suite Report \n");
       bufferedWriter.write("Adapter process avg (ms): " + adapterProcessTimeAvg + "\n");
       bufferedWriter.write("Comet process avg (ms): " + cometProcessTimeAvg + "\n");

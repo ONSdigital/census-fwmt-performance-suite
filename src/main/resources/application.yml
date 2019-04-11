@@ -32,3 +32,7 @@ logging:
 
 rabbitmq:
   rabbitLocation: "localhost"
+
+storage:
+  csvLocation: "src/main/resources/csv/Performance_Test_CSV.csv"
+  reportLocation: "src/main/resources/report/Performance_Test_Report.txt"
