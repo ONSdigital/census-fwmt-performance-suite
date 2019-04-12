@@ -64,8 +64,8 @@ public class GatewayPerformanceMonitor {
     Connection connection = factory.newConnection();
     Channel channel = connection.createChannel();
 
-    channel.exchangeDeclare(GATEWAY_EVENTS_EXCHANGE, "fanout", true);
     String queueName = channel.queueDeclare().getQueue();
+    channel.exchangeDeclare(GATEWAY_EVENTS_EXCHANGE, "fanout", true);
     channel.queueBind(queueName, GATEWAY_EVENTS_EXCHANGE, GATEWAY_EVENTS_ROUTING_KEY);
 
     createFile();
@@ -99,6 +99,12 @@ public class GatewayPerformanceMonitor {
       Thread.sleep(1000);
     }
     reportCreation.readCSV(Math.toIntExact(receivedMessageCounted), csvFileName);
+
+    channel.queueDelete(queueName,false,false);
+    counter.set(0);
+    expectedMessageCount.set(0);
+    isJobComplete.set(false);
+
   }
 
   private void addEvent(GatewayEventDTO gatewayEventDTO) {
