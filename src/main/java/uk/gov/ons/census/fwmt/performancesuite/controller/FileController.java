@@ -12,9 +12,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 
 @Controller
-public class FileDownloadController {
+public class FileController {
 
   @Value("${storage.csvLocation}")
   private String csvFileName;
@@ -39,5 +40,25 @@ public class FileDownloadController {
     final ByteArrayResource resource = new ByteArrayResource(fileBytes);
     return ResponseEntity.ok().contentLength(fileBytes.length).contentType(MediaType.APPLICATION_OCTET_STREAM)
         .body(resource);
+  }
+
+  @GetMapping("/deleteCSV")
+  public ResponseEntity  deleteCSV() throws IOException {
+    if (true){
+      Files.deleteIfExists(Paths.get(csvFileName));
+      return ResponseEntity.ok("CSV deleted.");
+    } else {
+      return new ResponseEntity<>("File not found.", HttpStatus.NOT_FOUND);
+    }
+  }
+
+  @GetMapping("/deleteReport")
+  public ResponseEntity deleteReport() throws IOException {
+    if (true){
+      Files.deleteIfExists(Paths.get(reportFileName));
+      return ResponseEntity.ok("Report deleted");
+    } else {
+      return new ResponseEntity<>("File not found.", HttpStatus.NOT_FOUND);
+    }
   }
 }
