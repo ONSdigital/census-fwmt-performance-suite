@@ -99,6 +99,10 @@ public class GatewayPerformanceMonitor {
       Thread.sleep(1000);
     }
     reportCreation.readCSV(Math.toIntExact(receivedMessageCounted), csvFileName);
+
+    counter.set(0);
+    isJobComplete.set(false);
+
   }
 
   private void addEvent(GatewayEventDTO gatewayEventDTO) {

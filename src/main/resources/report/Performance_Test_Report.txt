@@ -1,0 +1,6 @@
+Performance Suite Report 
+Adapter process avg (ms): 6
+Comet process avg (ms): 79
+End To End Total Time Taken (ms): 85
+Minimum End To End Time Taken (ms): 85
+Maximum End To End Tie Taken: (ms)90
