@@ -51,6 +51,8 @@ public class GatewayPerformanceMonitor {
   private ReportCreation reportCreation;
   private Map<String, CSVRecordDTO> csvRecordDTOMap = new HashMap<>();
   private PrintWriter writer;
+  private CSVRecordDTO initialCsvRecordDTO;
+  private CSVRecordDTO finalCsvRecordDTO;
 
   public GatewayPerformanceMonitor() {
     this.csvFileName = csvFileName;
@@ -98,7 +100,8 @@ public class GatewayPerformanceMonitor {
     while (!isJobComplete.get()) {
       Thread.sleep(1000);
     }
-    reportCreation.readCSV(Math.toIntExact(receivedMessageCounted), csvFileName);
+    reportCreation
+        .readCSV(Math.toIntExact(receivedMessageCounted), initialCsvRecordDTO, finalCsvRecordDTO, csvFileName);
 
     channel.queueDelete(queueName,false,false);
     counter.set(0);
@@ -130,10 +133,11 @@ public class GatewayPerformanceMonitor {
       break;
     case "Comet - Create Job Acknowledged":
       csvRecordDTO.setCometCreateJobAcknowledged(String.valueOf(gatewayEventDTO.getLocalTime()));
+
       LocalTime rmRequestReceived = LocalTime.parse(csvRecordDTO.getRmRequestReceived());
       LocalTime actionCreateSend = LocalTime.parse(csvRecordDTO.getCanonicalActionCreateSent());
       LocalTime canonicalRecieved = LocalTime.parse(csvRecordDTO.getCanonicalCreateJobReceived());
-      LocalTime cometCreateJobAcknowledge = LocalTime.parse((csvRecordDTO.getCometCreateJobAcknowledged()));
+      LocalTime cometCreateJobAcknowledge = LocalTime.parse(csvRecordDTO.getCometCreateJobAcknowledged());
       LocalTime cometCreateJobSend = LocalTime.parse(csvRecordDTO.getCometCreateJobRequest());
 
       String rmToCometSend = String.valueOf(MILLIS.between(rmRequestReceived, cometCreateJobSend));
@@ -145,6 +149,14 @@ public class GatewayPerformanceMonitor {
       csvRecordDTO.setEndToEndTimeTaken(endToEndTimeTaken);
       csvRecordDTO.setAdapterProcessTime(adapterProcessTime);
       csvRecordDTO.setCometProcessTime(cometProcessTime);
+
+      if (counter.get() == 0) {
+        initialCsvRecordDTO = csvRecordDTO;
+      }
+
+      if (counter.get() == expectedMessageCount.get() - 1) {
+        finalCsvRecordDTO = csvRecordDTO;
+      }
 
       printRecord(csvRecordDTO);
       csvRecordDTOMap.remove(gatewayEventDTO.getCaseId());
