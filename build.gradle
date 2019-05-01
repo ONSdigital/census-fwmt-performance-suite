@@ -1,36 +1,22 @@
-buildscript {
-	ext {
-		springBootVersion = '2.1.0.RELEASE'
-	}
-	repositories {
-		mavenCentral()
-		jcenter()
-	}
-	dependencies {
-		classpath 'org.springframework.boot:spring-boot-gradle-plugin:2.1.0.RELEASE'
-		classpath 'org.jfrog.buildinfo:build-info-extractor-gradle:4.7.2'
-		classpath 'org.ajoberstar:gradle-git:1.4.2'
-	}
-}
-
-
 plugins {
 	id 'java'
 	id 'application'
+
+	id 'org.springframework.boot' version '2.1.4.RELEASE'
+	id 'io.spring.dependency-management' version '1.0.7.RELEASE'
+
+	id 'com.github.psxpaul.execfork' version '0.1.10'
+
+	id 'maven-publish'
+	id 'org.ajoberstar.grgit' version '3.1.1'
+	id 'com.jfrog.artifactory' version '4.9.6'
+
 	id 'idea'
 	id 'eclipse'
-	id 'maven'
-	id 'maven-publish'
-	id 'org.springframework.boot' version '2.1.0.RELEASE'
-	id 'io.spring.dependency-management' version '1.0.6.RELEASE'
-	id 'com.github.psxpaul.execfork' version '0.1.8'
-	id 'com.jfrog.artifactory' version '4.8.1'
-	id 'org.ajoberstar.grgit' version '3.0.0'
+	id 'com.github.ben-manes.versions' version '0.21.0'
 }
 
-apply plugin: 'io.spring.dependency-management'
-
-description = 'census-fwmt-performancesuite'
+description = 'census-fwmt-performance-suite'
 group = 'uk.gov.ons.census.fwmt'
 version = '1.0.1-SNAPSHOT'
 
@@ -46,45 +32,35 @@ repositories {
 		maven { url 'http://artifactory-sdc.onsdigital.uk/artifactory/libs-snapshot' }
 	}
 	mavenCentral()
-	mavenLocal()
+}
+
+dependencies {
+	compile 'uk.gov.ons.census.fwmt:census-fwmt-events:1.0.6-RELEASE'
+	compile 'uk.gov.ons.census.fwmt:census-fwmt-common:1.0.12-RELEASE'
+
+	compile 'org.springframework.boot:spring-boot-starter-actuator:2.1.4.RELEASE'
+
+	compile 'com.opencsv:opencsv:4.6'
+
+	compile 'io.springfox:springfox-swagger2:2.9.2'
+	compile 'io.springfox:springfox-swagger-ui:2.9.2'
+
+	compile 'org.projectlombok:lombok:1.18.6'
+	annotationProcessor 'org.projectlombok:lombok:1.18.6'
+	testAnnotationProcessor 'org.projectlombok:lombok:1.18.6'
+
+	implementation 'org.springframework.boot:spring-boot-starter-web:2.1.4.RELEASE'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test:2.1.4.RELEASE'
 }
 
 springBoot {
 	buildInfo {
 		properties {
 			additional = [
-					'Git-Commit': grgit.head().getAbbreviatedId(8)
+					'Git-Commit': grgit.head().abbreviatedId
 			]
 		}
 	}
-}
-
-dependencies {
-	compile("uk.gov.ons.census.fwmt:census-fwmt-events:1.0.5-RELEASE")
-	compile("uk.gov.ons.census.fwmt:census-fwmt-common:1.0.8-RELEASE")
-
-	implementation 'org.springframework.boot:spring-boot-starter-web'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-
-	compile('org.projectlombok:lombok')
-	annotationProcessor('org.projectlombok:lombok')
-	testAnnotationProcessor('org.projectlombok:lombok')
-
-	compile('io.springfox:springfox-swagger2:2.9.2')
-	compile('io.springfox:springfox-swagger-ui:2.9.2')
-
-	compile('org.springframework.boot:spring-boot-starter-actuator')
-
-	compile 'com.opencsv:opencsv:4.5'
-
-}
-
-bootJar {
-	group = 'uk.gov.ons.census.fwmt'
-	baseName = 'census-fwmt-performancesuite'
-	manifest {
-	}
-	version = version
 }
 
 artifactory {
